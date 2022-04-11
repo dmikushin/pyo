@@ -310,8 +310,11 @@ elif sys.platform == "darwin":
 else:
     data_files = []
 
-libraries += ["m"]
-extra_compile_args = ["-Wno-strict-prototypes", "-Wno-strict-aliasing"] + oflag + gflag
+
+extra_compile_args = oflag + gflag
+if sys.platform != "win32":
+    libraries += ["m"]
+    extra_compile_args += ["-Wno-strict-prototypes", "-Wno-strict-aliasing"]
 
 extensions = []
 for extension_name, extra_macros in zip(extension_names, extra_macros_per_extension):
