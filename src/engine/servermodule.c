@@ -331,7 +331,7 @@ int
 Server_embedded_ni_start(Server *self)
 {
     int i, j;
-    float out[self->bufferSize * self->nchnls];
+    float* out = malloc(sizeof(out[0]) * self->bufferSize * self->nchnls);
 
     Server_process_buffers(self);
 
@@ -349,6 +349,8 @@ Server_embedded_ni_start(Server *self)
     }
 
     self->midi_count = 0;
+
+    free(out);
     return 0;
 }
 
@@ -380,13 +382,13 @@ Server_process_buffers(Server *server)
     //clock_t begin = clock();
 
     float *out = server->output_buffer;
-    MYFLT buffer[server->nchnls][server->bufferSize];
+    MYFLT* buffer = malloc(sizeof(buffer[0]) * server->nchnls * server->bufferSize);
     int i, j, chnl, nchnls = server->nchnls;
     MYFLT amp = server->amp;
     Stream *stream_tmp;
     MYFLT *data;
 
-    memset(&buffer, 0, sizeof(buffer));
+    memset(&buffer, 0, sizeof(buffer[0]) * server->nchnls * server->bufferSize);
 
     /* This is the biggest bottle-neck of the callback. Don't know
        how (or if possible) to improve GIL acquire/release.
@@ -414,7 +416,7 @@ Server_process_buffers(Server *server)
 
                 for (j = 0; j < server->bufferSize; j++)
                 {
-                    buffer[chnl][j] += *data++;
+                    buffer[chnl * server->bufferSize + j] += *data++;
                 }
             }
 
@@ -458,7 +460,7 @@ Server_process_buffers(Server *server)
 
         for (j = 0; j < server->nchnls; j++)
         {
-            out[(i * server->nchnls) + j] = (float)buffer[j][i] * server->currentAmp;
+            out[(i * server->nchnls) + j] = (float)buffer[j * server->bufferSize + i] * server->currentAmp;
         }
     }
 
@@ -469,12 +471,14 @@ Server_process_buffers(Server *server)
     //clock_t end = clock();
     //double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     //printf("%f\n", time_spent);
+
+    free(buffer);
 }
 
 void
 Server_process_gui(Server *server)
 {
-    float rms[server->nchnls];
+    float* rms = malloc(sizeof(rms[0]) * server->nchnls);
     float *out = server->output_buffer;
     float outAmp;
     int i, j;
@@ -578,6 +582,8 @@ Server_process_gui(Server *server)
 
         server->gcount = 0;
     }
+
+    free(rms);
 }
 
 void
@@ -2633,7 +2639,7 @@ static PyObject *
 Server_getCurrentAmp(Server *self)
 {
     PyObject *amplist;
-    float rms[self->nchnls];
+    float* rms = malloc(sizeof(rms[0]) * self->nchnls);
     float *out = self->output_buffer;
     float outAmp;
     int i, j;
@@ -2659,6 +2665,7 @@ Server_getCurrentAmp(Server *self)
         PyTuple_SET_ITEM(amplist, i, PyFloat_FromDouble(rms[i]));
     }
 
+    free(rms);
     return amplist;
 }
 

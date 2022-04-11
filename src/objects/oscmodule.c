@@ -25,6 +25,7 @@
 #include "streammodule.h"
 #include "servermodule.h"
 #include "dummymodule.h"
+#if 0
 #include "lo/lo.h"
 
 static void error(int num, const char *msg, const char *path)
@@ -1960,3 +1961,4 @@ PyTypeObject OscListReceiveType =
     0,                         /* tp_alloc */
     OscListReceive_new,                 /* tp_new */
 };
+#endif

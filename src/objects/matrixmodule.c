@@ -376,7 +376,7 @@ NewMatrix_getImageData(NewMatrix *self)
 {
     int i, j, w3, index;
     char value;
-    char matrix[self->width * self->height * 3];
+    char* matrix = malloc(sizeof(matrix[0]) * self->width * self->height * 3);
 
     w3 = self->width * 3;
 
@@ -390,7 +390,9 @@ NewMatrix_getImageData(NewMatrix *self)
         }
     }
 
-    return PyByteArray_FromStringAndSize(matrix, self->width * self->height * 3);
+    PyObject *result = PyByteArray_FromStringAndSize(matrix, self->width * self->height * 3);
+    free(matrix);
+    return result;
 };
 
 static PyObject *
@@ -594,8 +596,8 @@ MatrixRec_compute_next_data_frame(MatrixRec *self)
         else
             num2 = num - off;
 
-        MYFLT buffer[num2];
-        memset(&buffer, 0, sizeof(buffer));
+        MYFLT* buffer = malloc(sizeof(buffer[0]) * num2);
+        memset(&buffer, 0, sizeof(buffer[0]) * num2);
         MYFLT *in = Stream_getData((Stream *)self->input_stream);
 
         for (i = 0; i < num; i++)
@@ -619,6 +621,8 @@ MatrixRec_compute_next_data_frame(MatrixRec *self)
         }
 
         NewMatrix_recordChunkAllRow((NewMatrix *)self->matrix, buffer, num2);
+
+	free(buffer);
     }
 }
 
@@ -817,8 +821,8 @@ MatrixRecLoop_compute_next_data_frame(MatrixRecLoop *self)
     int height = NewMatrix_getHeight((NewMatrix *)self->matrix);
     int size = width * height;
 
-    MYFLT buffer[self->bufsize];
-    memset(&buffer, 0, sizeof(buffer));
+    MYFLT* buffer = malloc(sizeof(buffer[0]) * self->bufsize);
+    memset(&buffer, 0, sizeof(buffer[0]) * self->bufsize);
     MYFLT *in = Stream_getData((Stream *)self->input_stream);
 
     for (i = 0; i < self->bufsize; i++)
@@ -834,6 +838,8 @@ MatrixRecLoop_compute_next_data_frame(MatrixRecLoop *self)
     }
 
     NewMatrix_recordChunkAllRow((NewMatrix *)self->matrix, buffer, self->bufsize);
+
+    free(buffer);
 }
 
 static int

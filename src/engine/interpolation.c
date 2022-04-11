@@ -21,6 +21,9 @@
 #include "interpolation.h"
 #include "pyomodule.h"
 #include <math.h>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 MYFLT nointerp(MYFLT *buf, T_SIZE_T index, MYFLT frac, T_SIZE_T size)
 {

@@ -21,6 +21,9 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <math.h>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 #include "sndfile.h"
 #include "pyomodule.h"
 #include "servermodule.h"
@@ -588,7 +591,7 @@ p_savefileFromTable(PyObject *self, PyObject *args, PyObject *kwds)
     }
     else
     {
-        MYFLT *data[channels];
+        MYFLT **data = malloc(sizeof(data[0]) * channels);
 
         if (size < (sr * 60))
         {
@@ -638,6 +641,8 @@ p_savefileFromTable(PyObject *self, PyObject *args, PyObject *kwds)
             }
             while (num_items == (sr * 30));
         }
+
+	free(data);
     }
 
     sf_close(recfile);
@@ -709,7 +714,7 @@ lp_conv(MYFLT *samples, MYFLT *impulse, int num_samps, int size, int gain)
 {
     int i, j, count, tmp_count;
     MYFLT val;
-    MYFLT intmp[size];
+    MYFLT* intmp = malloc(sizeof(intmp[0]) * size);
 
     for (i = 0; i < size; i++)
     {
@@ -738,6 +743,8 @@ lp_conv(MYFLT *samples, MYFLT *impulse, int num_samps, int size, int gain)
         intmp[count] = samples[i];
         samples[i] = val;
     }
+
+    free(intmp);
 }
 
 static PyObject *

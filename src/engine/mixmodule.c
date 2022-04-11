@@ -97,8 +97,8 @@ Mix_compute_next_data_frame(Mix *self)
     PyObject *stream;
     Py_ssize_t lsize = PyList_Size(self->input);
 
-    MYFLT buffer[self->bufsize];
-    memset(&buffer, 0, sizeof(buffer));
+    MYFLT* buffer = malloc(sizeof(buffer[0]) * self->bufsize);
+    memset(&buffer, 0, sizeof(buffer[0]) * self->bufsize);
 
     for (i = 0; i < lsize; i++)
     {
@@ -118,6 +118,8 @@ Mix_compute_next_data_frame(Mix *self)
     }
 
     (*self->muladd_func_ptr)(self);
+
+    free(buffer);
 }
 
 static int

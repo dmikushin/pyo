@@ -31,6 +31,9 @@
 #include "wind.h"
 #include "pyomodule.h"
 #include <math.h>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 void gen_window(MYFLT *window, T_SIZE_T size, int wintype)
 {

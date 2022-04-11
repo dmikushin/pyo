@@ -7633,10 +7633,10 @@ CrossFm_readframes(CrossFm *self)
 {
     MYFLT mod_freq, mod_amp, mod_delta, mod_val, car_freq, car_amp, car_delta, fpart;
     int i, ipart;
-    MYFLT car[self->bufsize];
-    MYFLT rat[self->bufsize];
-    MYFLT ind1[self->bufsize];
-    MYFLT ind2[self->bufsize];
+    MYFLT* car = malloc(sizeof(car[0]) * self->bufsize);
+    MYFLT* rat = malloc(sizeof(rat[0]) * self->bufsize);
+    MYFLT* ind1 = malloc(sizeof(ind1[0]) * self->bufsize);
+    MYFLT* ind2 = malloc(sizeof(ind2[0]) * self->bufsize);
 
     if (self->modebuffer[2] == 0)
     {
@@ -7735,6 +7735,11 @@ CrossFm_readframes(CrossFm *self)
         self->pointerPos_car += car_delta;
         self->data[i] = (self->car_val + mod_val) * 0.5;
     }
+
+    free(car);
+    free(rat);
+    free(ind1);
+    free(ind2);
 }
 
 static void CrossFm_postprocessing_ii(CrossFm *self) { POST_PROCESSING_II };

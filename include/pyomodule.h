@@ -25,6 +25,12 @@
 
 #include <stdint.h>
 #include <math.h>
+#ifndef M_E
+#define M_E 2.71828182845904523536
+#endif
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 #define PYO_VERSION "1.0.4"
 
@@ -1508,29 +1514,32 @@ extern PyTypeObject MMLZStreamType;
 /* Matrix macros */
 #define MATRIX_BLUR \
     int i,j; \
-    MYFLT tmp[self->height][self->width]; \
+    MYFLT* tmp = malloc(sizeof(tmp[0]) * self->height * self->width); \
  \
     int lw = self->width - 1; \
     int lh = self->height - 1; \
     for (i=1; i<lw; i++) { \
-        tmp[0][i] = (self->data[0][i-1] + self->data[0][i] + self->data[1][i] + self->data[0][i+1]) * 0.25; \
-        tmp[lh][i] = (self->data[lh][i-1] + self->data[lh][i] + self->data[lh-1][i] + self->data[lh][i+1]) * 0.25; \
+        tmp[0 * self->width + i] = (self->data[0][i-1] + self->data[0][i] + self->data[1][i] + self->data[0][i+1]) * 0.25; \
+        tmp[lh * self->width + i] = (self->data[lh][i-1] + self->data[lh][i] + self->data[lh-1][i] + self->data[lh][i+1]) * 0.25; \
     } \
     for (i=1; i<lh; i++) { \
-        tmp[i][0] = (self->data[i-1][0] + self->data[i][0] + self->data[i][1] + self->data[i+1][0]) * 0.25; \
-        tmp[i][lw] = (self->data[i-1][lw] + self->data[i][lw] + self->data[i][lw-1] + self->data[i+1][lw]) * 0.25; \
+        tmp[i * self->width + 0] = (self->data[i-1][0] + self->data[i][0] + self->data[i][1] + self->data[i+1][0]) * 0.25; \
+        tmp[i * self->width + lw] = (self->data[i-1][lw] + self->data[i][lw] + self->data[i][lw-1] + self->data[i+1][lw]) * 0.25; \
     } \
  \
     for (i=1; i<lh; i++) { \
         for (j=1; j<lw; j++) { \
-            tmp[i][j] = (self->data[i][j-1] + self->data[i][j] + self->data[i][j+1]) * 0.3333333; \
+            tmp[i * self->width + j] = (self->data[i][j-1] + self->data[i][j] + self->data[i][j+1]) * 0.3333333; \
         } \
     } \
     for (j=1; j<lw; j++) { \
         for (i=1; i<lh; i++) { \
-            self->data[i][j] = (tmp[i-1][j] + tmp[i][j] + tmp[i+1][j]) * 0.3333333; \
+            self->data[i][j] = (tmp[(i-1) * self->width + j] + tmp[i * self->width + j] + tmp[(i+1) * self->width + j]) * 0.3333333; \
         } \
     } \
+ \
+    free(tmp); \
+ \
     Py_RETURN_NONE;
 
 #define MATRIX_BOOST \

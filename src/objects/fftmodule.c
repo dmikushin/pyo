@@ -1670,7 +1670,7 @@ FrameDeltaMain_generate(FrameDeltaMain *self)
     int i, j, which, where;
     MYFLT curPhase, lastPhase, diff;
 
-    MYFLT ins[self->overlaps][self->bufsize];
+    MYFLT* ins = malloc(sizeof(ins[0]) * self->overlaps * self->bufsize);
 
     for (j = 0; j < self->overlaps; j++)
     {
@@ -1678,7 +1678,7 @@ FrameDeltaMain_generate(FrameDeltaMain *self)
 
         for (i = 0; i < self->bufsize; i++)
         {
-            ins[j][i] = in[i];
+            ins[j * self->bufsize + i] = in[i];
         }
     }
 
@@ -1686,7 +1686,7 @@ FrameDeltaMain_generate(FrameDeltaMain *self)
     {
         for (j = 0; j < self->overlaps; j++)
         {
-            curPhase = ins[j][i];
+            curPhase = ins[j * self->bufsize + i];
             which = j - 1;
 
             if (which < 0)
@@ -1719,6 +1719,8 @@ FrameDeltaMain_generate(FrameDeltaMain *self)
         if (self->count >= self->frameSize)
             self->count = 0;
     }
+
+    free(ins);
 }
 
 MYFLT *
@@ -2243,7 +2245,7 @@ FrameAccumMain_generate(FrameAccumMain *self)
     int i, j, which, where;
     MYFLT curPhase, lastPhase, diff;
 
-    MYFLT ins[self->overlaps][self->bufsize];
+    MYFLT* ins = malloc(sizeof(ins[0]) * self->overlaps * self->bufsize);
 
     for (j = 0; j < self->overlaps; j++)
     {
@@ -2251,7 +2253,7 @@ FrameAccumMain_generate(FrameAccumMain *self)
 
         for (i = 0; i < self->bufsize; i++)
         {
-            ins[j][i] = in[i];
+            ins[j * self->bufsize + i] = in[i];
         }
     }
 
@@ -2259,7 +2261,7 @@ FrameAccumMain_generate(FrameAccumMain *self)
     {
         for (j = 0; j < self->overlaps; j++)
         {
-            curPhase = ins[j][i];
+            curPhase = ins[j * self->bufsize + i];
             which = j - 1;
 
             if (which < 0)
@@ -2281,6 +2283,8 @@ FrameAccumMain_generate(FrameAccumMain *self)
         if (self->count >= self->frameSize)
             self->count = 0;
     }
+
+    free(ins);
 }
 
 MYFLT *
@@ -2849,7 +2853,7 @@ VectralMain_generate(VectralMain *self)
 
     damp = damp * 0.1 + 0.9;
 
-    MYFLT ins[self->overlaps][self->bufsize];
+    MYFLT* ins = malloc(sizeof(ins[0]) * self->overlaps * self->bufsize);
 
     for (j = 0; j < self->overlaps; j++)
     {
@@ -2857,7 +2861,7 @@ VectralMain_generate(VectralMain *self)
 
         for (i = 0; i < self->bufsize; i++)
         {
-            ins[j][i] = in[i];
+            ins[j * self->bufsize + i] = in[i];
         }
     }
 
@@ -2881,7 +2885,7 @@ VectralMain_generate(VectralMain *self)
                 bin += self->frameSize;
 
             slope = MYPOW(damp, (MYFLT)(bin % halfSize));
-            curMag = ins[j][i] * slope;
+            curMag = ins[j * self->bufsize + i] * slope;
             lastMag = self->frameBuffer[which][where];
             diff = curMag - lastMag;
 
@@ -2899,6 +2903,8 @@ VectralMain_generate(VectralMain *self)
         if (self->count >= self->frameSize)
             self->count = 0;
     }
+
+    free(ins);
 }
 
 MYFLT *

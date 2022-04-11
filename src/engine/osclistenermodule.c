@@ -22,6 +22,7 @@
 #include "structmember.h"
 #include <math.h>
 #include "pyomodule.h"
+#if 0
 #include "lo/lo.h"
 
 static void error(int num, const char *msg, const char *path)
@@ -266,3 +267,4 @@ PyTypeObject OscListenerType =
     0,                         /* tp_alloc */
     OscListener_new,                 /* tp_new */
 };
+#endif

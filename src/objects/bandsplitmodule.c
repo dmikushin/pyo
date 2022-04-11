@@ -21,6 +21,9 @@
 #include <Python.h>
 #include "structmember.h"
 #include <math.h>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 #include "pyomodule.h"
 #include "streammodule.h"
 #include "servermodule.h"
@@ -783,7 +786,8 @@ FourBandMain_phase_align(FourBandMain *self, MYFLT *input, int bound, int filter
 {
     int i, indl = filtercount, indh = filtercount + 1;
     double val, inval;
-    MYFLT tmplow[self->bufsize], tmphigh[self->bufsize];
+    MYFLT *tmplow = malloc(sizeof(tmplow[0]) * self->bufsize);
+    MYFLT *tmphigh = malloc(sizeof(tmphigh[0]) * self->bufsize);
 
     for (i = 0; i < self->bufsize; i++)
     {
@@ -822,6 +826,9 @@ FourBandMain_phase_align(FourBandMain *self, MYFLT *input, int bound, int filter
         input[i] = tmplow[i] + tmphigh[i];
     }
 
+    free(tmplow);
+    free(tmphigh);
+
     return filtercount + 2;
 }
 
@@ -832,7 +839,8 @@ FourBandMain_filters(FourBandMain *self)
     int bounds = 3;
     double f1, f2, f3;
     MYFLT *input;
-    MYFLT outlow[self->bufsize], outhigh[self->bufsize];
+    MYFLT* outlow = malloc(sizeof(outlow[0]) * self->bufsize);
+    MYFLT* outhigh = malloc(sizeof(outhigh[0]) * self->bufsize);
 
     MYFLT *in = Stream_getData((Stream *)self->input_stream);
 
@@ -892,6 +900,9 @@ FourBandMain_filters(FourBandMain *self)
     {
         self->buffer_streams[i + bounds * self->bufsize] = outhigh[i];
     }
+
+    free(outlow);
+    free(outhigh);
 }
 
 MYFLT *
@@ -1579,7 +1590,8 @@ MultiBandMain_phase_align(MultiBandMain *self, MYFLT *input, int bound, int filt
 {
     int i, indl = filtercount, indh = filtercount + 1;
     double val, inval;
-    MYFLT tmplow[self->bufsize], tmphigh[self->bufsize];
+    MYFLT *tmplow = malloc(sizeof(tmplow[0]) * self->bufsize);
+    MYFLT *tmphigh = malloc(sizeof(tmphigh[0]) * self->bufsize);
 
     for (i = 0; i < self->bufsize; i++)
     {
@@ -1618,6 +1630,9 @@ MultiBandMain_phase_align(MultiBandMain *self, MYFLT *input, int bound, int filt
         input[i] = tmplow[i] + tmphigh[i];
     }
 
+    free(tmplow);
+    free(tmphigh);
+
     return filtercount + 2;
 }
 
@@ -1627,7 +1642,8 @@ MultiBandMain_filters(MultiBandMain *self)
     int i, bound, align, filtercount = 0;
     int bounds = self->nbands - 1;
     MYFLT *input;
-    MYFLT outlow[self->bufsize], outhigh[self->bufsize];
+    MYFLT *outlow = malloc(sizeof(outlow[0]) * self->bufsize);
+    MYFLT *outhigh = malloc(sizeof(outhigh[0]) * self->bufsize);
 
     MYFLT *in = Stream_getData((Stream *)self->input_stream);
 
@@ -1654,6 +1670,9 @@ MultiBandMain_filters(MultiBandMain *self)
     {
         self->buffer_streams[i + bounds * self->bufsize] = outhigh[i];
     }
+
+    free(outlow);
+    free(outhigh);
 }
 
 MYFLT *

@@ -112,8 +112,8 @@ Freeverb_transform_iii(Freeverb *self)
     mix1 = MYSQRT(mix);
     mix2 = MYSQRT(1.0 - mix);
 
-    MYFLT tmp[self->bufsize];
-    memset(&tmp, 0, sizeof(tmp));
+    MYFLT* tmp = malloc(sizeof(tmp[0]) * self->bufsize);
+    memset(&tmp, 0, sizeof(tmp[0]) * self->bufsize);
 
     for (j = 0; j < self->bufsize; j++)
     {
@@ -151,6 +151,8 @@ Freeverb_transform_iii(Freeverb *self)
     {
         self->data[i] = (tmp[i] * fixedGain * mix1) + (in[i] * mix2);
     }
+
+    free(tmp);
 }
 
 static void
@@ -169,8 +171,8 @@ Freeverb_transform_aii(Freeverb *self)
     mix1 = MYSQRT(mix);
     mix2 = MYSQRT(1.0 - mix);
 
-    MYFLT tmp[self->bufsize];
-    memset(&tmp, 0, sizeof(tmp));
+    MYFLT* tmp = malloc(sizeof(tmp[0]) * self->bufsize);
+    memset(&tmp, 0, sizeof(tmp[0]) * self->bufsize);
 
     for (j = 0; j < self->bufsize; j++)
     {
@@ -210,6 +212,8 @@ Freeverb_transform_aii(Freeverb *self)
     {
         self->data[i] = (tmp[i] * fixedGain * mix1) + (in[i] * mix2);
     }
+
+    free(tmp);
 }
 
 static void
@@ -228,8 +232,8 @@ Freeverb_transform_iai(Freeverb *self)
     mix1 = MYSQRT(mix);
     mix2 = MYSQRT(1.0 - mix);
 
-    MYFLT tmp[self->bufsize];
-    memset(&tmp, 0, sizeof(tmp));
+    MYFLT* tmp = malloc(sizeof(tmp[0]) * self->bufsize);
+    memset(&tmp, 0, sizeof(tmp[0]) * self->bufsize);
 
     for (j = 0; j < self->bufsize; j++)
     {
@@ -269,6 +273,8 @@ Freeverb_transform_iai(Freeverb *self)
     {
         self->data[i] = (tmp[i] * fixedGain * mix1) + (in[i] * mix2);
     }
+
+    free(tmp);
 }
 
 static void
@@ -285,8 +291,8 @@ Freeverb_transform_aai(Freeverb *self)
     mix1 = MYSQRT(mix);
     mix2 = MYSQRT(1.0 - mix);
 
-    MYFLT tmp[self->bufsize];
-    memset(&tmp, 0, sizeof(tmp));
+    MYFLT* tmp = malloc(sizeof(tmp[0]) * self->bufsize);
+    memset(&tmp, 0, sizeof(tmp[0]) * self->bufsize);
 
     for (j = 0; j < self->bufsize; j++)
     {
@@ -327,6 +333,8 @@ Freeverb_transform_aai(Freeverb *self)
     {
         self->data[i] = (tmp[i] * fixedGain * mix1) + (in[i] * mix2);
     }
+
+    free(tmp);
 }
 
 static void
@@ -343,8 +351,8 @@ Freeverb_transform_iia(Freeverb *self)
     feedback = siz * scaleRoom + offsetRoom;
     damp = dam * scaleDamp;
 
-    MYFLT tmp[self->bufsize];
-    memset(&tmp, 0, sizeof(tmp));
+    MYFLT* tmp = malloc(sizeof(tmp[0]) * self->bufsize);
+    memset(&tmp, 0, sizeof(tmp[0]) * self->bufsize);
 
     for (j = 0; j < self->bufsize; j++)
     {
@@ -385,6 +393,8 @@ Freeverb_transform_iia(Freeverb *self)
         mix2 = MYSQRT(1.0 - mixtmp);
         self->data[i] = (tmp[i] * fixedGain * mix1) + (in[i] * mix2);
     }
+
+    free(tmp);
 }
 
 static void
@@ -400,8 +410,8 @@ Freeverb_transform_aia(Freeverb *self)
 
     damp = dam * scaleDamp;
 
-    MYFLT tmp[self->bufsize];
-    memset(&tmp, 0, sizeof(tmp));
+    MYFLT* tmp = malloc(sizeof(tmp[0]) * self->bufsize);
+    memset(&tmp, 0, sizeof(tmp[0]) * self->bufsize);
 
     for (j = 0; j < self->bufsize; j++)
     {
@@ -444,6 +454,8 @@ Freeverb_transform_aia(Freeverb *self)
         mix2 = MYSQRT(1.0 - mixtmp);
         self->data[i] = (tmp[i] * fixedGain * mix1) + (in[i] * mix2);
     }
+
+    free(tmp);
 }
 
 static void
@@ -459,8 +471,8 @@ Freeverb_transform_iaa(Freeverb *self)
 
     feedback = siz * scaleRoom + offsetRoom;
 
-    MYFLT tmp[self->bufsize];
-    memset(&tmp, 0, sizeof(tmp));
+    MYFLT* tmp = malloc(sizeof(tmp[0]) * self->bufsize);
+    memset(&tmp, 0, sizeof(tmp[0]) * self->bufsize);
 
     for (j = 0; j < self->bufsize; j++)
     {
@@ -503,6 +515,8 @@ Freeverb_transform_iaa(Freeverb *self)
         mix2 = MYSQRT(1.0 - mixtmp);
         self->data[i] = (tmp[i] * fixedGain * mix1) + (in[i] * mix2);
     }
+
+    free(tmp);
 }
 
 static void
@@ -516,8 +530,8 @@ Freeverb_transform_aaa(Freeverb *self)
     MYFLT *dam = Stream_getData((Stream *)self->damp_stream);
     MYFLT *mix = Stream_getData((Stream *)self->mix_stream);
 
-    MYFLT tmp[self->bufsize];
-    memset(&tmp, 0, sizeof(tmp));
+    MYFLT* tmp = malloc(sizeof(tmp[0]) * self->bufsize);
+    memset(&tmp, 0, sizeof(tmp[0]) * self->bufsize);
 
     for (j = 0; j < self->bufsize; j++)
     {
@@ -561,6 +575,8 @@ Freeverb_transform_aaa(Freeverb *self)
         mix2 = MYSQRT(1.0 - mixtmp);
         self->data[i] = (tmp[i] * fixedGain * mix1) + (in[i] * mix2);
     }
+
+    free(tmp);
 }
 
 static void Freeverb_postprocessing_ii(Freeverb *self) { POST_PROCESSING_II };

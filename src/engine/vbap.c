@@ -8,6 +8,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 #include <Python.h>
 #include "vbap.h"
 
@@ -349,7 +352,7 @@ static void spreadit(float azi, float spread, VBAP_DATA *data)
     CART_VEC spreadbase[16];
     int i, spreaddirnum = 16;
     int cnt = data->ls_am;
-    float tmp_gains[cnt];
+    float* tmp_gains = malloc(sizeof(tmp_gains[0]) * cnt);
 
     for (i = 0; i < cnt; i++)
     {
@@ -418,6 +421,8 @@ static void spreadit(float azi, float spread, VBAP_DATA *data)
     {
         data->gains[i] /= sum;
     }
+
+    free(tmp_gains);
 }
 
 static void spreadit_azi_ele(float azi, float ele, float sp_azi,
@@ -428,7 +433,7 @@ static void spreadit_azi_ele(float azi, float ele, float sp_azi,
     ANG_VEC spreadang;
     CART_VEC spreadcart;
     int cnt = data->ls_am;
-    float tmp_gains[cnt];
+    float* tmp_gains = malloc(sizeof(tmp_gains[0]) * cnt);
 
     for (i = 0; i < cnt; i++)
     {
@@ -546,6 +551,8 @@ static void spreadit_azi_ele(float azi, float ele, float sp_azi,
         ind = data->out_patches[i] - 1;
         data->gains[ind] /= sum;
     }
+
+    free(tmp_gains);
 }
 
 static void spreadit_azi_ele_flip_y_z(float azi, float ele, float sp_azi,
@@ -556,7 +563,7 @@ static void spreadit_azi_ele_flip_y_z(float azi, float ele, float sp_azi,
     ANG_VEC spreadang;
     CART_VEC spreadcart;
     int cnt = data->ls_am;
-    float tmp_gains[cnt];
+    float* tmp_gains = malloc(sizeof(tmp_gains[0]) * cnt);
 
     for (i = 0; i < cnt; i++)
     {
@@ -677,6 +684,8 @@ static void spreadit_azi_ele_flip_y_z(float azi, float ele, float sp_azi,
         ind = data->out_patches[i] - 1;
         data->gains[ind] /= sum;
     }
+
+    free(tmp_gains);
 }
 
 static void spreadit_azi(float azi, float sp_azi, VBAP_DATA *data)
@@ -686,7 +695,7 @@ static void spreadit_azi(float azi, float sp_azi, VBAP_DATA *data)
     ANG_VEC spreadang;
     CART_VEC spreadcart;
     int cnt = data->ls_am;
-    float tmp_gains[cnt];
+    float* tmp_gains = malloc(sizeof(tmp_gains[0]) * cnt);
 
     for (i = 0; i < cnt; i++)
     {
@@ -742,6 +751,8 @@ static void spreadit_azi(float azi, float sp_azi, VBAP_DATA *data)
     {
         data->gains[i] /= sum;
     }
+
+    free(tmp_gains);
 }
 
 static void spreadit_azi_flip_y_z(float azi, float sp_azi, VBAP_DATA *data)
@@ -751,7 +762,7 @@ static void spreadit_azi_flip_y_z(float azi, float sp_azi, VBAP_DATA *data)
     ANG_VEC spreadang;
     CART_VEC spreadcart;
     int cnt = data->ls_am;
-    float tmp_gains[cnt];
+    float* tmp_gains = malloc(sizeof(tmp_gains[0]) * cnt);
 
     for (i = 0; i < cnt; i++)
     {
@@ -810,6 +821,8 @@ static void spreadit_azi_flip_y_z(float azi, float sp_azi, VBAP_DATA *data)
     {
         data->gains[i] /= sum;
     }
+
+    free(tmp_gains);
 }
 
 void free_speakers_setup(SPEAKERS_SETUP *setup)

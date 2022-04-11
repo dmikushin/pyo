@@ -203,14 +203,17 @@ HRTFData_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     MYFLT re, im, ma, ph;
     int hsize = self->length / 2;
     int n8 = self->length >> 3;
-    MYFLT outframe[self->length];
+    MYFLT* outframe = malloc(sizeof(outframe[0]) * self->length);
 
     for (i = 0; i < self->length; i++)
     {
         outframe[i] = 0.0;
     }
 
-    MYFLT real[hsize], imag[hsize], magn[hsize], freq[hsize];
+    MYFLT* real = malloc(sizeof(real[0]) * hsize);
+    MYFLT* imag = malloc(sizeof(imag[0]) * hsize);
+    MYFLT* magn = malloc(sizeof(magn[0]) * hsize);
+    MYFLT* freq = malloc(sizeof(freq[0]) * hsize);
 
     for (i = 0; i < hsize; i++)
     {
@@ -305,6 +308,13 @@ HRTFData_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     PyMem_RawFree(twiddle);
 
+    free(real);
+    free(imag);
+    free(magn);
+    free(freq);
+
+    free(outframe);
+
     return (PyObject *)self;
 }
 
@@ -395,8 +405,12 @@ HRTFSpatter_splitter(HRTFSpatter *self)
     MYFLT azi, ele, norm_elev, sig, elev_frac, elev_frac_inv;
     MYFLT azim_frac_down, azim_frac_inv_down, azim_frac_up, azim_frac_inv_up, cross_coeff, cross_coeff_inv;
     MYFLT magL, angL, magR, angR;
-    MYFLT inframeL[self->length], inframeR[self->length];
-    MYFLT realL[hsize], imagL[hsize], realR[hsize], imagR[hsize];
+    MYFLT* inframeL = malloc(sizeof(inframeL[0]) * self->length);
+    MYFLT* inframeR = malloc(sizeof(inframeR[0]) * self->length);
+    MYFLT* realL = malloc(sizeof(realL[0]) * hsize);
+    MYFLT* imagL = malloc(sizeof(imagL[0]) * hsize);
+    MYFLT* realR = malloc(sizeof(realR[0]) * hsize);
+    MYFLT* imagR = malloc(sizeof(imagR[0]) * hsize);
     MYFLT *hrtf_diff = HRTFData_getHRTFDiff((HRTFData *)self->hrtfdata);
     MYFLT ***mag_left = HRTFData_getMagLeft((HRTFData *)self->hrtfdata);
     MYFLT ***ang_left = HRTFData_getAngLeft((HRTFData *)self->hrtfdata);
@@ -585,6 +599,13 @@ HRTFSpatter_splitter(HRTFSpatter *self)
             self->hrtf_sample_count = 0;
         }
     }
+
+    free(inframeL);
+    free(inframeR);
+    free(realL);
+    free(imagL);
+    free(realR);
+    free(imagR);
 }
 
 MYFLT *
