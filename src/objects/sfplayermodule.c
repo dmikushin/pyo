@@ -70,8 +70,8 @@ SfPlayer_readframes_i(SfPlayer *self)
 
     buflen = (T_SIZE_T)(self->bufsize * delta + 0.5) + 64;
     totlen = self->sndChnls * buflen;
-    MYFLT buffer[totlen];
-    MYFLT buffer2[self->sndChnls][buflen];
+    MYFLT* buffer = malloc(sizeof(buffer[0]) * totlen);
+    MYFLT* buffer2 = malloc(sizeof(buffer2[0]) * self->sndChnls * buflen);
 
     if (sp > 0)   /* forward reading */
     {
@@ -117,7 +117,7 @@ SfPlayer_readframes_i(SfPlayer *self)
             }
             else   /* wrap around and read new samples if loop */
             {
-                MYFLT buftemp[pad];
+                MYFLT* buftemp = malloc(sizeof(buftemp[0]) * pad);
                 sf_seek(self->sf, (sf_count_t)self->startPos, SEEK_SET);
                 SF_READ(self->sf, buftemp, pad);
 
@@ -125,6 +125,8 @@ SfPlayer_readframes_i(SfPlayer *self)
                 {
                     buffer[i + shortbuflen * self->sndChnls] = buftemp[i];
                 }
+
+		free(buftemp);
             }
         }
         else /* without zero padding */
@@ -133,7 +135,7 @@ SfPlayer_readframes_i(SfPlayer *self)
         /* de-interleave samples */
         for (i = 0; i < totlen; i++)
         {
-            buffer2[i % self->sndChnls][(T_SIZE_T)(i / self->sndChnls)] = buffer[i];
+            buffer2[(i % self->sndChnls) * buflen + (T_SIZE_T)(i / self->sndChnls)] = buffer[i];
         }
 
         /* fill samplesBuffer with samples */
@@ -146,7 +148,7 @@ SfPlayer_readframes_i(SfPlayer *self)
 
             for (j = 0; j < self->sndChnls; j++)
             {
-                self->samplesBuffer[i + (j * self->bufsize)] = (*self->interp_func_ptr)(buffer2[j], bufindex, frac, buflen);
+                self->samplesBuffer[i + (j * self->bufsize)] = (*self->interp_func_ptr)(&buffer2[j * buflen], bufindex, frac, buflen);
             }
 
             self->pointerPos += delta;
@@ -206,7 +208,7 @@ SfPlayer_readframes_i(SfPlayer *self)
             }
             else   /* wrap around and read new samples if loop */
             {
-                MYFLT buftemp[padlen];
+                MYFLT* buftemp = malloc(sizeof(buftemp[0]) * padlen);
                 sf_seek(self->sf, (sf_count_t)startPos - pad, SEEK_SET);
                 SF_READ(self->sf, buftemp, padlen);
 
@@ -214,9 +216,11 @@ SfPlayer_readframes_i(SfPlayer *self)
                 {
                     buffer[i] = buftemp[i];
                 }
+
+		free(buftemp);
             }
 
-            MYFLT buftemp2[shortbuflen * self->sndChnls];
+            MYFLT* buftemp2 = malloc(sizeof(buftemp2[0]) * shortbuflen * self->sndChnls);
             sf_seek(self->sf, 0, SEEK_SET); /* sets position pointer in the file */
             SF_READ(self->sf, buftemp2, shortbuflen * self->sndChnls);
 
@@ -224,6 +228,8 @@ SfPlayer_readframes_i(SfPlayer *self)
             {
                 buffer[i + padlen] = buftemp2[i];
             }
+
+	    free(buftemp2);
         }
         else /* without zero padding */
             sf_seek(self->sf, index - buflen, SEEK_SET); /* sets position pointer in the file */
@@ -233,7 +239,7 @@ SfPlayer_readframes_i(SfPlayer *self)
         /* de-interleave samples */
         for (i = 0; i < totlen; i++)
         {
-            buffer2[i % self->sndChnls][(T_SIZE_T)(i / self->sndChnls)] = buffer[i];
+            buffer2[(i % self->sndChnls) * buflen + (T_SIZE_T)(i / self->sndChnls)] = buffer[i];
         }
 
         /* reverse arrays */
@@ -246,9 +252,9 @@ SfPlayer_readframes_i(SfPlayer *self)
 
             for (a = 0; a < --b; a++) //increment a and decrement b until they meet eachother
             {
-                swap = buffer2[i][a];       //put what's in a into swap space
-                buffer2[i][a] = buffer2[i][b];    //put what's in b into a
-                buffer2[i][b] = swap;       //put what's in the swap (a) into b
+                swap = buffer2[i * buflen + a];       //put what's in a into swap space
+                buffer2[i * buflen + a] = buffer2[i * buflen + b];    //put what's in b into a
+                buffer2[i * buflen + b] = swap;       //put what's in the swap (a) into b
             }
         }
 
@@ -262,7 +268,7 @@ SfPlayer_readframes_i(SfPlayer *self)
 
             for (j = 0; j < self->sndChnls; j++)
             {
-                self->samplesBuffer[i + (j * self->bufsize)] = (*self->interp_func_ptr)(buffer2[j], bufindex, frac, buflen);
+                self->samplesBuffer[i + (j * self->bufsize)] = (*self->interp_func_ptr)(&buffer2[j * buflen], bufindex, frac, buflen);
             }
 
             self->pointerPos -= delta;
@@ -283,6 +289,9 @@ SfPlayer_readframes_i(SfPlayer *self)
             self->samplesBuffer[i] = 0.0;
         }
     }
+
+    free(buffer);
+    free(buffer2);
 }
 
 static void
@@ -1076,8 +1085,8 @@ SfMarkerShuffler_readframes_i(SfMarkerShuffler *self)
 
     buflen = (T_SIZE_T)(self->bufsize * delta + 0.5) + 64;
     totlen = self->sndChnls * buflen;
-    MYFLT buffer[totlen];
-    MYFLT buffer2[self->sndChnls][buflen];
+    MYFLT* buffer = malloc(sizeof(buffer[0]) * totlen);
+    MYFLT* buffer2 = malloc(sizeof(buffer2[0]) * self->sndChnls * buflen);
 
     if (sp > 0)   /* reading forward */
     {
@@ -1109,7 +1118,7 @@ SfMarkerShuffler_readframes_i(SfMarkerShuffler *self)
             /* wrap around and read new samples from new marker */
             int pad = buflen - shortbuflen;
             int padlen = pad * self->sndChnls;
-            MYFLT buftemp[padlen];
+            MYFLT* buftemp = malloc(sizeof(buftemp[0]) * padlen);
             sf_seek(self->sf, (sf_count_t)self->nextStartPos, SEEK_SET);
             SF_READ(self->sf, buftemp, padlen);
 
@@ -1117,6 +1126,8 @@ SfMarkerShuffler_readframes_i(SfMarkerShuffler *self)
             {
                 buffer[i + shortbuflen * self->sndChnls] = buftemp[i];
             }
+
+	    free(buftemp);
         }
         else /* without wraparound */
             SF_READ(self->sf, buffer, totlen);
@@ -1124,7 +1135,7 @@ SfMarkerShuffler_readframes_i(SfMarkerShuffler *self)
         /* de-interleave samples */
         for (i = 0; i < totlen; i++)
         {
-            buffer2[i % self->sndChnls][(T_SIZE_T)(i / self->sndChnls)] = buffer[i];
+            buffer2[(i % self->sndChnls) * buflen + (T_SIZE_T)(i / self->sndChnls)] = buffer[i];
         }
 
         /* fill data with samples */
@@ -1136,7 +1147,7 @@ SfMarkerShuffler_readframes_i(SfMarkerShuffler *self)
 
             for (j = 0; j < self->sndChnls; j++)
             {
-                self->samplesBuffer[i + (j * self->bufsize)] = (*self->interp_func_ptr)(buffer2[j], bufindex, frac, buflen);
+                self->samplesBuffer[i + (j * self->bufsize)] = (*self->interp_func_ptr)(&buffer2[j * buflen], bufindex, frac, buflen);
             }
 
             self->pointerPos += delta;
@@ -1169,7 +1180,7 @@ SfMarkerShuffler_readframes_i(SfMarkerShuffler *self)
             int padlen = pad * self->sndChnls;
 
             /* wrap around and read new samples from new marker */
-            MYFLT buftemp[padlen];
+            MYFLT* buftemp = malloc(sizeof(buftemp[0]) * padlen);
             sf_seek(self->sf, (sf_count_t)self->nextStartPos - pad, SEEK_SET);
             SF_READ(self->sf, buftemp, padlen);
 
@@ -1178,7 +1189,9 @@ SfMarkerShuffler_readframes_i(SfMarkerShuffler *self)
                 buffer[i] = buftemp[i];
             }
 
-            MYFLT buftemp2[shortbuflen * self->sndChnls];
+	    free(buftemp);
+
+            MYFLT* buftemp2 = malloc(sizeof(buftemp2[0]) * shortbuflen * self->sndChnls);
             sf_seek(self->sf, (sf_count_t)self->endPos, SEEK_SET); /* sets position pointer in the file */
             SF_READ(self->sf, buftemp2, shortbuflen * self->sndChnls);
 
@@ -1186,6 +1199,8 @@ SfMarkerShuffler_readframes_i(SfMarkerShuffler *self)
             {
                 buffer[i + padlen] = buftemp2[i];
             }
+
+	    free(buftemp2);
         }
         else   /* without wraparound */
         {
@@ -1196,7 +1211,7 @@ SfMarkerShuffler_readframes_i(SfMarkerShuffler *self)
         /* de-interleave samples */
         for (i = 0; i < totlen; i++)
         {
-            buffer2[i % self->sndChnls][(T_SIZE_T)(i / self->sndChnls)] = buffer[i];
+            buffer2[(i % self->sndChnls) * buflen + (T_SIZE_T)(i / self->sndChnls)] = buffer[i];
         }
 
         /* reverse arrays */
@@ -1209,9 +1224,9 @@ SfMarkerShuffler_readframes_i(SfMarkerShuffler *self)
 
             for (a = 0; a < --b; a++) //increment a and decrement b until they meet eachother
             {
-                swap = buffer2[i][a];       //put what's in a into swap space
-                buffer2[i][a] = buffer2[i][b];    //put what's in b into a
-                buffer2[i][b] = swap;       //put what's in the swap (a) into b
+                swap = buffer2[i * buflen + a];       //put what's in a into swap space
+                buffer2[i * buflen + a] = buffer2[i * buflen + b];    //put what's in b into a
+                buffer2[i * buflen + b] = swap;       //put what's in the swap (a) into b
             }
         }
 
@@ -1224,7 +1239,7 @@ SfMarkerShuffler_readframes_i(SfMarkerShuffler *self)
 
             for (j = 0; j < self->sndChnls; j++)
             {
-                self->samplesBuffer[i + (j * self->bufsize)] = (*self->interp_func_ptr)(buffer2[j], bufindex, frac, buflen);
+                self->samplesBuffer[i + (j * self->bufsize)] = (*self->interp_func_ptr)(&buffer2[j * buflen], bufindex, frac, buflen);
             }
 
             self->pointerPos -= delta;
@@ -1246,6 +1261,9 @@ SfMarkerShuffler_readframes_i(SfMarkerShuffler *self)
             self->samplesBuffer[i] = 0.0;
         }
     }
+
+    free(buffer);
+    free(buffer2);
 }
 
 static void
@@ -1967,8 +1985,8 @@ SfMarkerLooper_readframes_i(SfMarkerLooper *self)
 
     buflen = (T_SIZE_T)(self->bufsize * delta + 0.5) + 64;
     totlen = self->sndChnls * buflen;
-    MYFLT buffer[totlen];
-    MYFLT buffer2[self->sndChnls][buflen];
+    MYFLT* buffer = malloc(sizeof(buffer[0]) * totlen);
+    MYFLT* buffer2 = malloc(sizeof(buffer2[0]) * self->sndChnls * buflen);
 
     if (sp > 0)   /* reading forward */
     {
@@ -2000,7 +2018,7 @@ SfMarkerLooper_readframes_i(SfMarkerLooper *self)
             /* wrap around and read new samples if loop */
             int pad = buflen - shortbuflen;
             int padlen = pad * self->sndChnls;
-            MYFLT buftemp[padlen];
+            MYFLT* buftemp = malloc(sizeof(buftemp[0]) * padlen);
             sf_seek(self->sf, (sf_count_t)self->nextStartPos, SEEK_SET);
             SF_READ(self->sf, buftemp, padlen);
 
@@ -2008,6 +2026,8 @@ SfMarkerLooper_readframes_i(SfMarkerLooper *self)
             {
                 buffer[i + shortbuflen * self->sndChnls] = buftemp[i];
             }
+
+	    free(buftemp);
         }
         else /* without zero padding */
             SF_READ(self->sf, buffer, totlen);
@@ -2015,7 +2035,7 @@ SfMarkerLooper_readframes_i(SfMarkerLooper *self)
         /* de-interleave samples */
         for (i = 0; i < totlen; i++)
         {
-            buffer2[i % self->sndChnls][(T_SIZE_T)(i / self->sndChnls)] = buffer[i];
+            buffer2[(i % self->sndChnls) * buflen + (T_SIZE_T)(i / self->sndChnls)] = buffer[i];
         }
 
         /* fill data with samples */
@@ -2027,7 +2047,7 @@ SfMarkerLooper_readframes_i(SfMarkerLooper *self)
 
             for (j = 0; j < self->sndChnls; j++)
             {
-                self->samplesBuffer[i + (j * self->bufsize)] = (*self->interp_func_ptr)(buffer2[j], bufindex, frac, buflen);
+                self->samplesBuffer[i + (j * self->bufsize)] = (*self->interp_func_ptr)(&buffer2[j * buflen], bufindex, frac, buflen);
             }
 
             self->pointerPos += delta;
@@ -2060,7 +2080,7 @@ SfMarkerLooper_readframes_i(SfMarkerLooper *self)
             int padlen = pad * self->sndChnls;
 
             /* wrap around and read new samples if loop */
-            MYFLT buftemp[padlen];
+            MYFLT* buftemp = malloc(sizeof(buftemp[0]) * padlen);
             sf_seek(self->sf, (sf_count_t)self->nextStartPos - pad, SEEK_SET);
             SF_READ(self->sf, buftemp, padlen);
 
@@ -2069,7 +2089,9 @@ SfMarkerLooper_readframes_i(SfMarkerLooper *self)
                 buffer[i] = buftemp[i];
             }
 
-            MYFLT buftemp2[shortbuflen * self->sndChnls];
+	    free(buftemp);
+
+            MYFLT* buftemp2 = malloc(sizeof(buftemp2[0]) * shortbuflen * self->sndChnls);
             sf_seek(self->sf, (sf_count_t)self->endPos, SEEK_SET); /* sets position pointer in the file */
             SF_READ(self->sf, buftemp2, shortbuflen * self->sndChnls);
 
@@ -2077,6 +2099,8 @@ SfMarkerLooper_readframes_i(SfMarkerLooper *self)
             {
                 buffer[i + padlen] = buftemp2[i];
             }
+
+	    free(buftemp2);
         }
         else   /* without zero padding */
         {
@@ -2087,7 +2111,7 @@ SfMarkerLooper_readframes_i(SfMarkerLooper *self)
         /* de-interleave samples */
         for (i = 0; i < totlen; i++)
         {
-            buffer2[i % self->sndChnls][(T_SIZE_T)(i / self->sndChnls)] = buffer[i];
+            buffer2[(i % self->sndChnls) * buflen + (T_SIZE_T)(i / self->sndChnls)] = buffer[i];
         }
 
         /* reverse arrays */
@@ -2100,9 +2124,9 @@ SfMarkerLooper_readframes_i(SfMarkerLooper *self)
 
             for (a = 0; a < --b; a++) //increment a and decrement b until they meet eachother
             {
-                swap = buffer2[i][a];       //put what's in a into swap space
-                buffer2[i][a] = buffer2[i][b];    //put what's in b into a
-                buffer2[i][b] = swap;       //put what's in the swap (a) into b
+                swap = buffer2[i * buflen + a];       //put what's in a into swap space
+                buffer2[i * buflen + a] = buffer2[i * buflen + b];    //put what's in b into a
+                buffer2[i * buflen + b] = swap;       //put what's in the swap (a) into b
             }
         }
 
@@ -2115,7 +2139,7 @@ SfMarkerLooper_readframes_i(SfMarkerLooper *self)
 
             for (j = 0; j < self->sndChnls; j++)
             {
-                self->samplesBuffer[i + (j * self->bufsize)] = (*self->interp_func_ptr)(buffer2[j], bufindex, frac, buflen);
+                self->samplesBuffer[i + (j * self->bufsize)] = (*self->interp_func_ptr)(&buffer2[j * buflen], bufindex, frac, buflen);
             }
 
             self->pointerPos -= delta;
@@ -2137,6 +2161,9 @@ SfMarkerLooper_readframes_i(SfMarkerLooper *self)
             self->samplesBuffer[i] = 0.0;
         }
     }
+
+    free(buffer);
+    free(buffer2);
 }
 
 static void
