@@ -198,7 +198,7 @@ HarmTable_generate(HarmTable *self)
     MYFLT factor, amplitude, val;
 
     ampsize = PyList_Size(self->amplist);
-    MYFLT array[ampsize];
+    MYFLT* array = malloc(sizeof(array[0]) * ampsize);
 
     for (j = 0; j < ampsize; j++)
     {
@@ -226,6 +226,8 @@ HarmTable_generate(HarmTable *self)
 
     val = self->data[0];
     self->data[self->size] = val;
+
+    free(array);
 }
 
 static int
@@ -471,7 +473,7 @@ ChebyTable_generate(ChebyTable *self)
     if (ampsize > 12)
         ampsize = 12;
 
-    MYFLT array[ampsize];
+    MYFLT* array = malloc(sizeof(array[0]) * ampsize);
 
     for (j = 0; j < ampsize; j++)
     {
@@ -551,6 +553,8 @@ ChebyTable_generate(ChebyTable *self)
 
     val = self->data[self->size - 1];
     self->data[self->size] = val;
+
+    free(array);
 }
 
 static int
@@ -698,7 +702,7 @@ ChebyTable_getNormTable(ChebyTable *self, PyObject *value)
     MYFLT val = 0.0, val2 = 0.0;
     MYFLT last = 0.0;
     long sym = PyLong_AsLong(value);
-    MYFLT samps[halfsize];  // FIXME: Very large table would cause stack overflow.
+    MYFLT* samps = malloc(sizeof(samps[0]) * halfsize);  // FIXME: Very large table would cause stack overflow.
     PyObject *samples = PyList_New(halfsize);
 
     if (sym == 0)
@@ -783,6 +787,8 @@ ChebyTable_getNormTable(ChebyTable *self, PyObject *value)
     {
         PyList_SET_ITEM(samples, i, PyFloat_FromDouble(samps[i]));
     }
+
+    free(samps);
 
     return samples;
 }
@@ -3126,8 +3132,8 @@ CurveTable_generate(CurveTable *self)
         return;
     }
 
-    T_SIZE_T times[listsize + 2];
-    MYFLT values[listsize + 2];
+    T_SIZE_T* times = malloc(sizeof(times[0]) * (listsize + 2));
+    MYFLT* values = malloc(sizeof(values[0]) * (listsize + 2));
 
     for (i = 0; i < listsize; i++)
     {
@@ -3190,6 +3196,9 @@ CurveTable_generate(CurveTable *self)
     }
 
     self->data[self->size] = self->data[self->size - 1];
+
+    free(times);
+    free(values);
 }
 
 static int
@@ -3505,8 +3514,8 @@ ExpTable_generate(ExpTable *self)
         return;
     }
 
-    T_SIZE_T times[listsize];
-    MYFLT values[listsize];
+    T_SIZE_T* times = malloc(sizeof(times[0]) * listsize);
+    MYFLT* values = malloc(sizeof(values[0]) * listsize);
 
     for (i = 0; i < listsize; i++)
     {
@@ -3571,6 +3580,9 @@ ExpTable_generate(ExpTable *self)
     }
 
     self->data[self->size] = y2;
+
+    free(times);
+    free(values);
 }
 
 static int
@@ -6997,8 +7009,8 @@ TrigTableRec_compute_next_data_frame(TrigTableRec *self)
         {
             upBound = size - self->fadeInSample;
 
-            MYFLT buffer[num];
-            memset(&buffer, 0, sizeof(buffer));
+            MYFLT* buffer = malloc(sizeof(buffer[0]) * num);
+            memset(buffer, 0, sizeof(buffer[0]) * num);
 
             for (i = 0; i < num; i++)
             {
@@ -7022,6 +7034,8 @@ TrigTableRec_compute_next_data_frame(TrigTableRec *self)
                     self->time_buffer_streams[i] = self->pointer;
                 }
             }
+
+	    free(buffer);
         }
     }
     else
@@ -7055,8 +7069,8 @@ TrigTableRec_compute_next_data_frame(TrigTableRec *self)
 
                 upBound = size - self->fadeInSample;
 
-                MYFLT buffer[num];
-                memset(&buffer, 0, sizeof(buffer));
+		MYFLT* buffer = malloc(sizeof(buffer[0]) * num);
+                memset(buffer, 0, sizeof(buffer[0]) * num);
 
                 for (i = 0; i < num; i++)
                 {
@@ -7082,6 +7096,8 @@ TrigTableRec_compute_next_data_frame(TrigTableRec *self)
                         self->time_buffer_streams[i + j] = self->pointer;
                     }
                 }
+
+		free(buffer);
 
                 break;
             }

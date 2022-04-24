@@ -5783,7 +5783,7 @@ Resample_create_impulse(Resample *self)
 {
     int i, half;
     MYFLT val, scl, sum, invSum, env, w;
-    MYFLT impulse[self->size];
+    MYFLT* impulse = malloc(sizeof(impulse[0]) * self->size);
 
     half = self->size / 2;
     sum = 0.0;
@@ -5818,6 +5818,8 @@ Resample_create_impulse(Resample *self)
     {
         self->pimpulse[i % self->factor][(int)(i / self->factor)] = impulse[i];
     }
+
+    free(impulse);
 }
 
 static void
